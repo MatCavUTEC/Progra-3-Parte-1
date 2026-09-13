@@ -1,0 +1,13 @@
+# Carpetas de compilación e IDE
+cmake-build-debug/
+cmake-build-release/
+.idea/
+.vscode/
+
+# Binarios y objetos
+*.exe
+*.o
+*.obj
+
+# FTXUI descargado externamente
+external/
