@@ -9,7 +9,7 @@ marca aquí con su commit de merge. La justificación de cada decisión está en
 - [x] **Etapa 1** — `feature/position-cells` — completa (tag `etapa-1`)
 - [x] **Etapa 2** — `feature/grid` — completa (tag `etapa-2`)
 - [x] **Etapa 3** — `feature/game-rules` — completa (tag `etapa-3`)
-- [ ] **Etapa 4** — `feature/algorithms`
+- [x] **Etapa 4** — `feature/algorithms` — completa (tag `etapa-4`)
 - [ ] **Etapa 5** — `feature/environment-core`
 - [ ] **Etapa 6** — `feature/cell-interactions`
 - [ ] **Etapa 7** — `feature/controllers`
@@ -128,15 +128,22 @@ Hecho:
   y las pruebas fallan al cambiar un valor de perfil, al aceptar mapas sin inicio y al construir
   una celda sin consultar las reglas.
 
-### Etapa 4 — `feature/algorithms`
+### Etapa 4 — `feature/algorithms` ✅ completa
 
 Secciones: §6.1, §6.4.
 
-- `algorithms.hpp`: al menos tres templates de función con iteradores (`countMatching`,
-  `findFirst` que devuelve `std::optional`, y `bestBy` o `totalCost`), `Overloaded` y una fold
-  expression (`anyTrue` o publicar varios eventos).
-- Pruebas (`tests/algorithms_test.cpp`, nuevo): rangos vacíos, `std::vector`, `std::list` y los
-  iteradores de `Grid`.
+Hecho:
+- `algorithms.hpp`: `countMatching` y `minimumBy` sobre rangos por iteradores, `findPosition` sobre
+  el tablero, `appendEvents` (paquete variádico con fold expression) y `Overloaded` con su guía de
+  deducción.
+- En lugar de `findFirst` quedó `findPosition`, que devuelve la posición y no la celda, que es lo
+  que necesita el entorno. `totalCost` y `anyTrue` se descartaron por no tener usuario.
+- Pruebas (`tests/algorithms_test.cpp`, registrado como `AlgorithmsTest`): rangos vacíos,
+  `std::vector`, `std::list` y los iteradores de `Grid`; empates en `minimumBy`; orden de
+  `appendEvents` y paquete vacío; `Overloaded` con las siete alternativas de `Cell`.
+- Verificado: `ctest` 5/5, sin advertencias con `-Wall -Wextra -Wpedantic -Wconversion -Wshadow`,
+  y las pruebas fallan al invertir la condición de `countMatching`, al romper el desempate de
+  `minimumBy` y al cambiar fila por columna en `findPosition`.
 - Referencia de estilo: `countMatching`, `copyMatching`, `minimumBy`, `allTrue`, `makeContainer`,
   `Overloaded`.
 

@@ -82,6 +82,24 @@ su propia celda, así que ese rasgo no tendría uso. `isTraversable` e `isCollec
 renderizado, así que un segundo accesor quedaría sin uso. `contains` responde lo mismo sin lanzar,
 y ambos consultan un único límite privado (`isInside`) para que no puedan discrepar.
 
+### Templates propios
+
+`algorithms.hpp` reúne los templates que usa el motor, en lugar de repetir bucles en cada capa:
+
+- `countMatching(first, last, predicate)`: cuenta elementos de cualquier rango. Se usa con los
+  iteradores de `Grid` (una sola salida, total de recursos) y con contenedores de acciones o
+  posiciones, que es la evidencia que pide §6.1 de un template usado con varios contenedores.
+- `minimumBy(first, last, cost)`: devuelve el elemento de menor costo, o `std::nullopt` si el rango
+  está vacío. Con costos iguales gana el primero, para que la política heurística sea reproducible.
+- `findPosition(grid, predicate)`: recibe el tablero, no un par de iteradores, porque debe traducir
+  el índice del recorrido a una `Position`; internamente usa los iteradores del tablero.
+- `appendEvents(destino, eventos...)`: publica varios eventos con una fold expression sobre el
+  operador coma.
+- `Overloaded`: combina lambdas para `std::visit`.
+
+Quedaron fuera `totalCost` y `anyTrue`, que el plan daba como alternativas: ningún punto del motor
+los necesita y §6.1 pide que los templates se usen.
+
 ### Recursos y baterías consumidos
 
 Se marcan con `collected` / `consumed` en lugar de reemplazar la celda por `Empty` (§5.7 admite
@@ -141,9 +159,9 @@ Se sigue §5.7:
 | Tema (sección del enunciado) | Dónde se aplica |
 |---|---|
 | `Grid<Cell, Rows, Columns>` con `std::array` e iteradores (§5.1, §6.2) | `include/circuit_escape/grid.hpp` |
-| Templates de función con iteradores (§6.1) | Pendiente |
+| Templates de función con iteradores (§6.1) | `countMatching` y `minimumBy` (rangos por iteradores) y `findPosition` (recibe el tablero) en `include/circuit_escape/algorithms.hpp` |
 | Especialización total y parcial (§6.3) | `CellTraits<Wall>` (total) y `CellTraits<ResourceCell<Reward>>` (parcial) en `include/circuit_escape/cells.hpp`; usadas por `isTraversable` e `isCollectible` en `src/cells.cpp` |
-| Paquete variádico y fold expression (§6.4) | Pendiente |
+| Paquete variádico y fold expression (§6.4) | `appendEvents` (fold sobre el operador coma) y `Overloaded` en `include/circuit_escape/algorithms.hpp` |
 | Concept, interfaz virtual y adaptador genérico (§6.5) | Pendiente |
 | Biblioteca estándar (§6.6) | Pendiente |
 | Prueba negativa de compilación (§8) | Pendiente |
