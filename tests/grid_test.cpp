@@ -4,11 +4,14 @@
 
 // Antes de cualquier include: assert sigue activo aunque Release defina NDEBUG
 #undef NDEBUG
+#include <algorithm>
 #include <cassert>
+#include <iterator>
 #include <stdexcept>
 #include <variant>
 
 #include "circuit_escape/cells.hpp"
+#include "circuit_escape/grid.hpp"
 #include "circuit_escape/position.hpp"
 
 // CellTraits se verifica al compilar: plantilla general, especialización total
@@ -129,6 +132,136 @@ namespace {
         assert(!isCollectible(Cell{Exit{}}));
     }
 
+    void testGridDimensionsAreCompileTime() {
+        static_assert(Grid<Cell, 3, 4>::rows() == 3);
+        static_assert(Grid<Cell, 3, 4>::columns() == 4);
+        const Grid<Cell, 3, 4> grid{};
+        assert(grid.rows() == 3);
+        assert(grid.columns() == 4);
+    }
+
+    void testGridContains() {
+        const Grid<Cell, 3, 4> grid{};
+        const Position inside{2, 3};
+        const Position rowOutside{3, 0};
+        const Position columnOutside{0, 4};
+        const Position farAway{100, 100};
+        assert(grid.contains(Position{}));
+        assert(grid.contains(inside));
+        assert(!grid.contains(rowOutside));
+        assert(!grid.contains(columnOutside));
+        assert(!grid.contains(farAway));
+    }
+
+    void testGridStartsEmpty() {
+        const Grid<Cell, 3, 4> cells{};
+        assert(std::holds_alternative<Empty>(cells.at(Position{})));
+        const Grid<int, 2, 2> numbers{};
+        assert(numbers.at(Position{}) == 0);
+    }
+
+    void testGridStoresCellsByPosition() {
+        Grid<Cell, 3, 4> grid{};
+        const Position wallAt{1, 2};
+        const Position untouched{1, 3};
+        grid.at(wallAt) = Wall{};
+        assert(std::holds_alternative<Wall>(grid.at(wallAt)));
+        assert(std::holds_alternative<Empty>(grid.at(untouched)));
+    }
+
+    void testGridCornersAreIndependent() {
+        Grid<Cell, 3, 4> grid{};
+        const Position topLeft{0, 0};
+        const Position topRight{0, 3};
+        const Position bottomLeft{2, 0};
+        const Position bottomRight{2, 3};
+        grid.at(topLeft) = Wall{};
+        grid.at(topRight) = Battery{};
+        grid.at(bottomLeft) = Trap{};
+        grid.at(bottomRight) = Exit{};
+        assert(std::holds_alternative<Wall>(grid.at(topLeft)));
+        assert(std::holds_alternative<Battery>(grid.at(topRight)));
+        assert(std::holds_alternative<Trap>(grid.at(bottomLeft)));
+        assert(std::holds_alternative<Exit>(grid.at(bottomRight)));
+    }
+
+    void testGridRejectsPositionsOutside() {
+        Grid<Cell, 3, 4> grid{};
+        const Position rowOutside{3, 0};
+        const Position columnOutside{0, 4};
+        const Position bothOutside{3, 4};
+        int thrown = 0;
+        for (const Position& position : {rowOutside, columnOutside, bothOutside}) {
+            try {
+                static_cast<void>(grid.at(position));
+            } catch (const std::out_of_range&) {
+                ++thrown;
+            }
+        }
+        assert(thrown == 3);
+    }
+
+    void testGridConstAccess() {
+        Grid<Cell, 3, 4> grid{};
+        const Position batteryAt{1, 1};
+        const Position outside{3, 4};
+        grid.at(batteryAt) = Battery{};
+
+        const Grid<Cell, 3, 4>& constGrid = grid;
+        assert(std::holds_alternative<Battery>(constGrid.at(batteryAt)));
+
+        bool thrown = false;
+        try {
+            static_cast<void>(constGrid.at(outside));
+        } catch (const std::out_of_range&) {
+            thrown = true;
+        }
+        assert(thrown);
+    }
+
+    void testGridIterationIsRowMajor() {
+        Grid<int, 3, 4> grid{};
+        int next = 0;
+        for (std::size_t row = 0; row < grid.rows(); ++row) {
+            for (std::size_t column = 0; column < grid.columns(); ++column) {
+                const Position position{row, column};
+                grid.at(position) = next;
+                ++next;
+            }
+        }
+
+        assert(std::distance(grid.begin(), grid.end()) == 12);
+        int expected = 0;
+        for (const int value : grid) {
+            assert(value == expected);
+            ++expected;
+        }
+        assert(expected == 12);
+    }
+
+    void testGridIteratorsCanModify() {
+        Grid<int, 2, 2> grid{};
+        for (int& value : grid) {
+            value = 7;
+        }
+        const Position last{1, 1};
+        assert(grid.at(last) == 7);
+    }
+
+    void testGridConstIterators() {
+        Grid<Cell, 3, 4> grid{};
+        const Position trapAt{2, 1};
+        grid.at(trapAt) = Trap{};
+
+        const Grid<Cell, 3, 4>& constGrid = grid;
+        assert(std::distance(constGrid.begin(), constGrid.end()) == 12);
+        assert(std::distance(grid.cbegin(), grid.cend()) == 12);
+
+        const auto traps = std::count_if(constGrid.begin(), constGrid.end(),
+                                         [](const Cell& cell) { return std::holds_alternative<Trap>(cell); });
+        assert(traps == 1);
+    }
+
     void testCollectedResourceStillCounts() {
         Cell cell = ResourceCell<int>{10};
         std::get<ResourceCell<int>>(cell).collected = true;
@@ -148,5 +281,15 @@ int main() {
     testCellDefaults();
     testTraitsThroughCell();
     testCollectedResourceStillCounts();
+    testGridDimensionsAreCompileTime();
+    testGridContains();
+    testGridStartsEmpty();
+    testGridStoresCellsByPosition();
+    testGridCornersAreIndependent();
+    testGridRejectsPositionsOutside();
+    testGridConstAccess();
+    testGridIterationIsRowMajor();
+    testGridIteratorsCanModify();
+    testGridConstIterators();
     return 0;
 }

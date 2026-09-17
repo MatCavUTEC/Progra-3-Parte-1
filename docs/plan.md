@@ -7,7 +7,7 @@ marca aquí con su commit de merge. La justificación de cada decisión está en
 
 - [x] **Etapa 0** — `chore/build-setup` — completa (merge `9802e78`)
 - [x] **Etapa 1** — `feature/position-cells` — completa (tag `etapa-1`)
-- [ ] **Etapa 2** — `feature/grid`
+- [x] **Etapa 2** — `feature/grid` — completa (tag `etapa-2`)
 - [ ] **Etapa 3** — `feature/game-rules`
 - [ ] **Etapa 4** — `feature/algorithms`
 - [ ] **Etapa 5** — `feature/environment-core`
@@ -90,15 +90,23 @@ Hecho:
   y las pruebas fallan al introducir errores a propósito.
 - Referencia de estilo: `TypeShape`, `ContainerTraits`, `sameValue`.
 
-### Etapa 2 — `feature/grid`
+### Etapa 2 — `feature/grid` ✅ completa
 
 Secciones: §5.1, §5.7 (cuadrícula), §6.2, §8 (acceso y bordes).
 
+Hecho:
 - `grid.hpp`: `Grid<CellType, Rows, Columns>` sobre `std::array`, con `static_assert` contra cero
-  filas o columnas, `contains`, `at` (lanza `std::out_of_range`), `operator()`, `rows()`,
-  `columns()` e iteradores const y no const.
-- Pruebas (`grid_test.cpp`) con tableros de 3 × 4: esquinas, accesos inválidos, versión const y
-  orden de recorrido por filas.
+  filas o columnas, `contains`, `at` en const y no const (lanza `std::out_of_range`), `rows()`,
+  `columns()`, `value_type` e iteradores const y no const (`begin`, `end`, `cbegin`, `cend`).
+- En lugar de `operator()(fila, columna)` se usa `at(Position)`, la "operación equivalente" que
+  admite §6.2 y la que usa el enunciado; el motivo está en `design.md`.
+- Pruebas (`grid_test.cpp`) con tableros de 3 × 4 y de 2 × 2: dimensiones en tiempo de compilación,
+  `contains`, tablero vacío al construir, acceso por posición, las cuatro esquinas, posiciones
+  fuera del tablero, versión const, recorrido por filas, modificación mediante iteradores e
+  iteradores const.
+- Verificado: `ctest` 4/4, sin advertencias con `-Wall -Wextra -Wpedantic -Wconversion -Wshadow`,
+  las pruebas fallan al invertir el índice a columnas y al aflojar `contains`, y un tablero de cero
+  filas no compila.
 - Referencia de estilo: `Matrix`, `FixedBuffer`.
 
 ### Etapa 3 — `feature/game-rules`
