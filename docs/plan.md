@@ -8,7 +8,7 @@ marca aquí con su commit de merge. La justificación de cada decisión está en
 - [x] **Etapa 0** — `chore/build-setup` — completa (merge `9802e78`)
 - [x] **Etapa 1** — `feature/position-cells` — completa (tag `etapa-1`)
 - [x] **Etapa 2** — `feature/grid` — completa (tag `etapa-2`)
-- [ ] **Etapa 3** — `feature/game-rules`
+- [x] **Etapa 3** — `feature/game-rules` — completa (tag `etapa-3`)
 - [ ] **Etapa 4** — `feature/algorithms`
 - [ ] **Etapa 5** — `feature/environment-core`
 - [ ] **Etapa 6** — `feature/cell-interactions`
@@ -109,16 +109,24 @@ Hecho:
   filas no compila.
 - Referencia de estilo: `Matrix`, `FixedBuffer`.
 
-### Etapa 3 — `feature/game-rules`
+### Etapa 3 — `feature/game-rules` ✅ completa
 
 Secciones: §5.5 (perfiles), §5.1 (carga del tablero).
 
-- `game_rules.hpp`: `Difficulty`, `GameRules`, `rulesFor()` y la lectura del texto
-  `easy` / `standard` / `hard` (devuelve `std::optional`). Implementación en `src/game_rules.cpp`.
-- Conversión de líneas de texto a `Grid<Cell, Rows, Columns>` usando los valores de `GameRules`
-  (lanza `std::invalid_argument` ante un símbolo o una longitud inválidos). Se ubica en
-  `cells.hpp`.
-- Pruebas: los tres perfiles (`interactions_test.cpp`) y la conversión de texto (`grid_test.cpp`).
+Hecho:
+- `game_rules.hpp` / `src/game_rules.cpp`: `Difficulty`, `GameRules` con los diez valores
+  configurables, `rulesFor()` con los perfiles `easy`, `standard` y `hard`, y `parseDifficulty()`,
+  que devuelve `std::optional` y distingue mayúsculas.
+- `scenario.hpp` / `src/scenario.cpp`: `Scenario<Rows, Columns>` (tablero y posición inicial),
+  `parseScenario()` y `cellFromSymbol()`, que copia a cada celda los valores de las reglas.
+- El costo de `wait` y el del intento inválido son dos campos distintos, con el mismo valor en los
+  tres perfiles; §5.4 los trata por separado.
+- Pruebas: los tres perfiles, el valor por defecto igual a `standard` y `parseDifficulty`
+  (`interactions_test.cpp`); todos los símbolos, los valores según el perfil, el inicio en
+  cualquier posición, siete formatos inválidos y un mapa con dos salidas (`grid_test.cpp`).
+- Verificado: `ctest` 4/4, sin advertencias con `-Wall -Wextra -Wpedantic -Wconversion -Wshadow`,
+  y las pruebas fallan al cambiar un valor de perfil, al aceptar mapas sin inicio y al construir
+  una celda sin consultar las reglas.
 
 ### Etapa 4 — `feature/algorithms`
 
@@ -228,7 +236,8 @@ Secciones: §6.6, §10.2, §10.3.
 
 El enunciado exige estas técnicas, que no aparecen en `referencia/`: `std::span`, `std::optional`,
 `std::visit` (con una lambda genérica `[](const auto& value)` y `decltype(value)`, desde la
-Etapa 1), `<random>`, el `operator==` por defecto, `FetchContent` y el renderizado de FTXUI
+Etapa 1), `<random>`, el `operator==` por defecto, los inicializadores designados
+(`GameRules{.initialEnergy = 80, ...}`, desde la Etapa 3), `FetchContent` y el renderizado de FTXUI
 dentro de una prueba. Todo lo demás se mantiene en el nivel de las tareas:
 - los iteradores de `Grid` son los de `std::array`, como en `FixedBuffer`;
 - los concepts usan `requires`, como `RuleFor`;
@@ -238,6 +247,8 @@ dentro de una prueba. Todo lo demás se mantiene en el nivel de las tareas:
 
 - La conversión de texto a tablero pasó de la Etapa 2 a la 3, porque según la decisión 2 copia
   valores de `GameRules`.
+- La conversión de texto a tablero no quedó en `cells.hpp` sino en `scenario.hpp`, porque necesita
+  `Grid` y `GameRules` y además devuelve la posición inicial del agente.
 - El rasgo de la especialización parcial es `collectible` en lugar de `consumable`. Las baterías
   también se consumen y cada efecto marca su propia celda, así que `consumable` no tendría uso;
   `collectible` permite contar los recursos del mapa (§6.3 exige usar el resultado).

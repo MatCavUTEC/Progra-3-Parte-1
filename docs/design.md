@@ -94,6 +94,19 @@ convención ASCII de §5.8, y `@` para la posición inicial del agente (esa celd
 `app/` y las pruebas leen el archivo. La conversión de las líneas a `Grid` es una función pura del
 motor que lanza `std::invalid_argument` si el formato no es válido.
 
+`parseScenario` (`include/circuit_escape/scenario.hpp`) devuelve un `Scenario`: el tablero y la
+posición inicial, que es lo que necesita el constructor del entorno. Vive en su propia cabecera
+porque necesita `Grid` y `GameRules`, dependencias que `cells.hpp` no tiene por qué arrastrar.
+Cada celda recibe sus valores desde las reglas recibidas, de acuerdo con "Valores de las reglas".
+
+El parser valida solo el formato: cantidad de filas, longitud de cada fila, símbolos conocidos y
+exactamente un `@`. Que exista una sola salida es precondición del entorno (§5.7), así que un mapa
+con dos salidas se convierte sin error y lo rechaza `NavigationEnvironment`.
+
+Pendiente para la interfaz (Etapa 9): la tabla de símbolos está hoy solo en `cellFromSymbol`. El
+modo ASCII necesita el mapeo inverso, de celda a carácter, así que conviene compartir una única
+tabla en lugar de escribir la correspondencia dos veces.
+
 ### Cabeceras adicionales
 
 Además de las cinco de §10.1:
