@@ -8,11 +8,15 @@
 #include <cassert>
 #include <iterator>
 #include <stdexcept>
+#include <string>
 #include <variant>
+#include <vector>
 
 #include "circuit_escape/cells.hpp"
+#include "circuit_escape/game_rules.hpp"
 #include "circuit_escape/grid.hpp"
 #include "circuit_escape/position.hpp"
+#include "circuit_escape/scenario.hpp"
 
 // CellTraits se verifica al compilar: plantilla general, especialización total
 // (Wall) y parcial (ResourceCell con cualquier tipo de recompensa).
@@ -262,6 +266,106 @@ namespace {
         assert(traps == 1);
     }
 
+    // Mapa de prueba de 3 x 4 con un símbolo de cada clase
+    std::vector<std::string> sampleMap() {
+        return {
+            "@.#~",
+            "RBTS",
+            "....",
+        };
+    }
+
+    void testParseScenarioReadsEverySymbol() {
+        const Scenario<3, 4> scenario = parseScenario<3, 4>(sampleMap(), rulesFor(Difficulty::standard));
+        const Position start{0, 0};
+        assert(scenario.start == start);
+
+        const Position startCell{0, 0};
+        const Position empty{0, 1};
+        const Position wall{0, 2};
+        const Position rough{0, 3};
+        const Position resource{1, 0};
+        const Position battery{1, 1};
+        const Position trap{1, 2};
+        const Position exit{1, 3};
+        // La celda del agente es espacio libre
+        assert(std::holds_alternative<Empty>(scenario.grid.at(startCell)));
+        assert(std::holds_alternative<Empty>(scenario.grid.at(empty)));
+        assert(std::holds_alternative<Wall>(scenario.grid.at(wall)));
+        assert(std::holds_alternative<RoughTerrain>(scenario.grid.at(rough)));
+        assert(std::holds_alternative<ResourceCell<int>>(scenario.grid.at(resource)));
+        assert(std::holds_alternative<Battery>(scenario.grid.at(battery)));
+        assert(std::holds_alternative<Trap>(scenario.grid.at(trap)));
+        assert(std::holds_alternative<Exit>(scenario.grid.at(exit)));
+    }
+
+    void testParseScenarioCopiesValuesFromRules() {
+        const Position rough{0, 3};
+        const Position resource{1, 0};
+        const Position battery{1, 1};
+        const Position trap{1, 2};
+
+        const Scenario<3, 4> easy = parseScenario<3, 4>(sampleMap(), rulesFor(Difficulty::easy));
+        assert(std::get<RoughTerrain>(easy.grid.at(rough)).energyCost == 2);
+        assert(std::get<ResourceCell<int>>(easy.grid.at(resource)).reward == 15);
+        assert(!std::get<ResourceCell<int>>(easy.grid.at(resource)).collected);
+        assert(std::get<Battery>(easy.grid.at(battery)).energy == 5);
+        assert(!std::get<Battery>(easy.grid.at(battery)).consumed);
+        assert(std::get<Trap>(easy.grid.at(trap)).energyPenalty == 1);
+        assert(std::get<Trap>(easy.grid.at(trap)).scorePenalty == 0);
+
+        const Scenario<3, 4> hard = parseScenario<3, 4>(sampleMap(), rulesFor(Difficulty::hard));
+        assert(std::get<RoughTerrain>(hard.grid.at(rough)).energyCost == 3);
+        assert(std::get<ResourceCell<int>>(hard.grid.at(resource)).reward == 8);
+        assert(std::get<Battery>(hard.grid.at(battery)).energy == 2);
+        assert(std::get<Trap>(hard.grid.at(trap)).energyPenalty == 3);
+        assert(std::get<Trap>(hard.grid.at(trap)).scorePenalty == 2);
+    }
+
+    void testParseScenarioFindsStartAnywhere() {
+        const std::vector<std::string> lines{
+            "....",
+            "..@.",
+            "....",
+        };
+        const Scenario<3, 4> scenario = parseScenario<3, 4>(lines, GameRules{});
+        const Position start{1, 2};
+        assert(scenario.start == start);
+    }
+
+    void countRejected(const std::vector<std::string>& lines, int& rejected) {
+        try {
+            static_cast<void>(parseScenario<3, 4>(lines, GameRules{}));
+        } catch (const std::invalid_argument&) {
+            ++rejected;
+        }
+    }
+
+    void testParseScenarioRejectsBadFormat() {
+        int rejected = 0;
+        countRejected({"@.#~", "RBTS"}, rejected);                    // faltan filas
+        countRejected({"@.#~", "RBTS", "....", "...."}, rejected);    // sobran filas
+        countRejected({"@.#", "RBTS", "...."}, rejected);             // fila corta
+        countRejected({"@.#~.", "RBTS", "...."}, rejected);           // fila larga
+        countRejected({"@.X~", "RBTS", "...."}, rejected);            // símbolo desconocido
+        countRejected({"..#~", "RBTS", "...."}, rejected);            // sin inicio
+        countRejected({"@.#~", "RBTS", "@..."}, rejected);            // dos inicios
+        assert(rejected == 7);
+    }
+
+    void testParseScenarioAcceptsSeveralExits() {
+        // Que exista una sola salida es precondición del entorno, no del formato
+        const std::vector<std::string> lines{
+            "@..S",
+            "....",
+            "S...",
+        };
+        const Scenario<3, 4> scenario = parseScenario<3, 4>(lines, GameRules{});
+        const auto exits = std::count_if(scenario.grid.begin(), scenario.grid.end(),
+                                         [](const Cell& cell) { return std::holds_alternative<Exit>(cell); });
+        assert(exits == 2);
+    }
+
     void testCollectedResourceStillCounts() {
         Cell cell = ResourceCell<int>{10};
         std::get<ResourceCell<int>>(cell).collected = true;
@@ -291,5 +395,10 @@ int main() {
     testGridIterationIsRowMajor();
     testGridIteratorsCanModify();
     testGridConstIterators();
+    testParseScenarioReadsEverySymbol();
+    testParseScenarioCopiesValuesFromRules();
+    testParseScenarioFindsStartAnywhere();
+    testParseScenarioRejectsBadFormat();
+    testParseScenarioAcceptsSeveralExits();
     return 0;
 }
