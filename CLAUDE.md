@@ -1,5 +1,6 @@
 # Convenciones — Circuito de Escape (CS2013)
 - Enunciado: docs/proyecto_1_2026_2.pdf. Mis tareas de referencia: referencia/ (no se compilan ni se suben).
+- Plan por etapas, decisiones confirmadas y avance: docs/plan.md (marcar ahí cada etapa al completarla).
 - C++20, CMake, pruebas con assert registradas en CTest.
 - Identificadores en inglés, miembros privados con sufijo `_`, `[[nodiscard]]` en consultas, `#pragma once`.
 - Templates definidos completos en los .hpp.
