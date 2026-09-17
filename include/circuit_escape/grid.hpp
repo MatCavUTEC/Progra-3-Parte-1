@@ -18,7 +18,7 @@ public:
     static constexpr std::size_t columns() noexcept { return Columns; }
 
     [[nodiscard]] constexpr bool contains(const Position position) const noexcept {
-        return position.row < Rows && position.column < Columns;
+        return isInside(position);
     }
 
     CellType& at(const Position position) { return cells_[indexOf(position)]; }
@@ -32,9 +32,14 @@ public:
     [[nodiscard]] const_iterator cend() const noexcept { return cells_.cend(); }
 
 private:
+    // Única definición del límite del tablero: la usan contains y indexOf
+    static constexpr bool isInside(const Position position) noexcept {
+        return position.row < Rows && position.column < Columns;
+    }
+
     // Las celdas se guardan por filas: primero la fila 0 completa, luego la 1, etc.
     static std::size_t indexOf(const Position position) {
-        if (position.row >= Rows || position.column >= Columns) {
+        if (!isInside(position)) {
             throw std::out_of_range("Grid: posición fuera del tablero " + toString(position));
         }
         return position.row * Columns + position.column;
