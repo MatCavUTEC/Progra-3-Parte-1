@@ -20,6 +20,7 @@ FetchContent_MakeAvailable(ftxui)
 # Biblioteca central (Core): no depende de FTXUI ni hace entrada/salida
 add_library(circuit_escape_core
         include/circuit_escape/position.hpp
+        include/circuit_escape/algorithms.hpp
         include/circuit_escape/grid.hpp
         include/circuit_escape/cells.hpp
         include/circuit_escape/environment.hpp
@@ -55,6 +56,10 @@ add_test(NAME EnvironmentTest COMMAND environment_test)
 add_executable(interactions_test tests/interactions_test.cpp)
 target_link_libraries(interactions_test PRIVATE circuit_escape_core)
 add_test(NAME InteractionsTest COMMAND interactions_test)
+
+add_executable(algorithms_test tests/algorithms_test.cpp)
+target_link_libraries(algorithms_test PRIVATE circuit_escape_core)
+add_test(NAME AlgorithmsTest COMMAND algorithms_test)
 
 add_executable(controllers_test tests/controllers_test.cpp)
 target_link_libraries(controllers_test PRIVATE circuit_escape_core)
