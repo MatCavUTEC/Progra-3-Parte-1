@@ -74,6 +74,14 @@ A diferencia del ejemplo de §6.3, los rasgos no incluyen `energyCost`: los núm
 su propia celda, así que ese rasgo no tendría uso. `isTraversable` e `isCollectible`
 (`src/cells.cpp`) aplican los rasgos a un `Cell` consultando su tipo activo con `std::visit`.
 
+### Acceso a las celdas del tablero
+
+`Grid` expone `at(Position)` en versión const y no const, que valida ambas coordenadas y lanza
+`std::out_of_range`. Esa es la "operación equivalente" que admite §6.2 en lugar de un
+`operator()(fila, columna)`: es la forma que usa el propio enunciado en §5.7 y en el ejemplo de
+renderizado, así que un segundo accesor quedaría sin uso. `contains` responde lo mismo sin lanzar,
+y ambos consultan un único límite privado (`isInside`) para que no puedan discrepar.
+
 ### Recursos y baterías consumidos
 
 Se marcan con `collected` / `consumed` en lugar de reemplazar la celda por `Empty` (§5.7 admite
@@ -119,7 +127,7 @@ Se sigue §5.7:
 
 | Tema (sección del enunciado) | Dónde se aplica |
 |---|---|
-| `Grid<Cell, Rows, Columns>` con `std::array` e iteradores (§5.1, §6.2) | Pendiente |
+| `Grid<Cell, Rows, Columns>` con `std::array` e iteradores (§5.1, §6.2) | `include/circuit_escape/grid.hpp` |
 | Templates de función con iteradores (§6.1) | Pendiente |
 | Especialización total y parcial (§6.3) | `CellTraits<Wall>` (total) y `CellTraits<ResourceCell<Reward>>` (parcial) en `include/circuit_escape/cells.hpp`; usadas por `isTraversable` e `isCollectible` en `src/cells.cpp` |
 | Paquete variádico y fold expression (§6.4) | Pendiente |
