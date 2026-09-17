@@ -1,0 +1,11 @@
+# Convenciones — Circuito de Escape (CS2013)
+- Enunciado: docs/proyecto_1_2026_2.pdf. Mis tareas de referencia: referencia/ (no se compilan ni se suben).
+- C++20, CMake, pruebas con assert registradas en CTest.
+- Identificadores en inglés, miembros privados con sufijo `_`, `[[nodiscard]]` en consultas, `#pragma once`.
+- Templates definidos completos en los .hpp.
+- Errores: std::out_of_range (acceso inválido), std::invalid_argument (precondiciones), std::logic_error (step tras terminar).
+- Prohibido: new/delete, globales mutables, typeid, dynamic_cast, condicionales según tipo de controlador.
+- FTXUI solo en app/. include/ y src/ no incluyen FTXUI ni hacen I/O.
+- Nivel de código: el de mis tareas en referencia/ (Matrix, FixedBuffer, Overloaded, RuleSet/RuleModel, TypeShape, countMatching, allTrue). No uses técnicas más avanzadas sin avisarme.
+- Código simple. Comentarios en español solo donde la decisión no sea obvia.
+- Una rama por etapa (feature/...), commits pequeños, nunca push a main. Compila y corre ctest antes de cada commit.
