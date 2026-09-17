@@ -6,7 +6,7 @@ marca aquí con su commit de merge. La justificación de cada decisión está en
 ## Avance
 
 - [x] **Etapa 0** — `chore/build-setup` — completa (merge `9802e78`)
-- [ ] **Etapa 1** — `feature/position-cells`
+- [x] **Etapa 1** — `feature/position-cells` — completa (tag `etapa-1`)
 - [ ] **Etapa 2** — `feature/grid`
 - [ ] **Etapa 3** — `feature/game-rules`
 - [ ] **Etapa 4** — `feature/algorithms`
@@ -71,16 +71,23 @@ Hecho:
 - `docs/design.md` con las decisiones confirmadas y `README.md` con la compilación.
 - Verificado: configuración desde una carpeta vacía y `ctest` 4/4 en Debug y Release.
 
-### Etapa 1 — `feature/position-cells`
+### Etapa 1 — `feature/position-cells` ✅ completa
 
 Secciones: §5.2, §5.5 (celdas), §5.7 (tipos básicos y celdas), §6.3.
 
-- `position.hpp`: `Position` (con `==`), `Action`, `neighbor()` (devuelve `std::nullopt` si la fila o
-  la columna saldría negativa) y `toString()`. Implementación en `src/position.cpp`.
+Hecho:
+- `position.hpp` / `src/position.cpp`: `Position` (con `==` por defecto), `Action`, `neighbor()`
+  (devuelve `std::nullopt` si la fila o la columna saldría negativa y lanza
+  `std::invalid_argument` ante una acción fuera del enum) y `toString()` con formato `(fila,columna)`.
 - `cells.hpp`: las siete celdas y el `std::variant` `Cell`.
 - `CellTraits`: plantilla general; especialización total para `Wall` (`traversable = false`);
-  especialización parcial para `ResourceCell<Reward>` (`consumable = true`).
-- Pruebas (`grid_test.cpp`): `neighbor` en bordes, `toString` y `static_assert` sobre los traits.
+  especialización parcial para `ResourceCell<Reward>` (`collectible = true`).
+- `src/cells.cpp`: `isTraversable` e `isCollectible` sobre un `Cell`.
+- Pruebas (`grid_test.cpp`): igualdad de posiciones, vecinos en el interior, bordes y esquinas,
+  `neighbor` sin conocer el tamaño del tablero, acción inválida, `toString`, valores por defecto de
+  las celdas, `static_assert` sobre los rasgos y rasgos a través de `Cell`.
+- Verificado: `ctest` 4/4, sin advertencias con `-Wall -Wextra -Wpedantic -Wconversion -Wshadow`,
+  y las pruebas fallan al introducir errores a propósito.
 - Referencia de estilo: `TypeShape`, `ContainerTraits`, `sameValue`.
 
 ### Etapa 2 — `feature/grid`
@@ -212,7 +219,8 @@ Secciones: §6.6, §10.2, §10.3.
 ## Técnicas nuevas respecto a las tareas de referencia
 
 El enunciado exige estas técnicas, que no aparecen en `referencia/`: `std::span`, `std::optional`,
-`std::visit`, `<random>`, el `operator==` por defecto, `FetchContent` y el renderizado de FTXUI
+`std::visit` (con una lambda genérica `[](const auto& value)` y `decltype(value)`, desde la
+Etapa 1), `<random>`, el `operator==` por defecto, `FetchContent` y el renderizado de FTXUI
 dentro de una prueba. Todo lo demás se mantiene en el nivel de las tareas:
 - los iteradores de `Grid` son los de `std::array`, como en `FixedBuffer`;
 - los concepts usan `requires`, como `RuleFor`;
@@ -222,3 +230,6 @@ dentro de una prueba. Todo lo demás se mantiene en el nivel de las tareas:
 
 - La conversión de texto a tablero pasó de la Etapa 2 a la 3, porque según la decisión 2 copia
   valores de `GameRules`.
+- El rasgo de la especialización parcial es `collectible` en lugar de `consumable`. Las baterías
+  también se consumen y cada efecto marca su propia celda, así que `consumable` no tendría uso;
+  `collectible` permite contar los recursos del mapa (§6.3 exige usar el resultado).
