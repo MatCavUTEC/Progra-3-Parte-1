@@ -1,13 +1,17 @@
 # Carpetas de compilación e IDE
-cmake-build-debug/
-cmake-build-release/
+build/
+cmake-build-*/
 .idea/
 .vscode/
+.vs/
 
 # Binarios y objetos
 *.exe
 *.o
 *.obj
 
-# FTXUI descargado externamente
+# Copia local opcional de FTXUI (ver FETCHCONTENT_SOURCE_DIR_FTXUI en CMakeLists.txt)
 external/
+
+# Tareas propias usadas como guía de estilo; no se suben
+referencia/

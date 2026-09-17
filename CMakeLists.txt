@@ -5,13 +5,19 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Indicar a CMake dónde buscar las cabeceras (.hpp)
-include_directories(include)
+# FTXUI fijado a una versión concreta (§5.8). Para compilar sin red se puede usar
+# una copia local: -DFETCHCONTENT_SOURCE_DIR_FTXUI=<ruta a FTXUI v7.0.3>
+include(FetchContent)
+set(FTXUI_ENABLE_INSTALL OFF CACHE BOOL "Generar reglas de instalación de FTXUI")
+set(FTXUI_QUIET ON CACHE BOOL "Ocultar mensajes de configuración de FTXUI")
+FetchContent_Declare(ftxui
+        GIT_REPOSITORY https://github.com/ArthurSonzogni/FTXUI
+        GIT_TAG v7.0.3
+        GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(ftxui)
 
-# Integración de FTXUI local (sin bloqueos de red)
-add_subdirectory(external/ftxui)
-
-# Biblioteca central (Core)
+# Biblioteca central (Core): no depende de FTXUI ni hace entrada/salida
 add_library(circuit_escape_core
         include/circuit_escape/grid.hpp
         include/circuit_escape/cells.hpp
@@ -21,14 +27,13 @@ add_library(circuit_escape_core
         src/environment.cpp
         src/controllers.cpp
 )
-# Vinculamos FTXUI a la librería core
-target_link_libraries(circuit_escape_core PUBLIC ftxui::screen ftxui::dom ftxui::component)
+target_include_directories(circuit_escape_core PUBLIC include)
 
-# Aplicación ejecutable principal (app/main.cpp)
+# Aplicación ejecutable principal (app/main.cpp): única parte que usa FTXUI
 add_executable(navigation_game
         app/main.cpp
 )
-target_link_libraries(navigation_game PRIVATE circuit_escape_core)
+target_link_libraries(navigation_game PRIVATE circuit_escape_core ftxui::ftxui)
 
 # Pruebas Unitarias explícitas (tests/)
 enable_testing()
