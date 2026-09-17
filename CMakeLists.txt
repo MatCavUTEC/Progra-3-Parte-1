@@ -26,6 +26,7 @@ add_library(circuit_escape_core
         include/circuit_escape/controllers.hpp
         include/circuit_escape/game_rules.hpp
         src/position.cpp
+        src/cells.cpp
         src/environment.cpp
         src/controllers.cpp
 )

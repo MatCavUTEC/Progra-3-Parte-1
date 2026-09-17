@@ -6,8 +6,22 @@
 #undef NDEBUG
 #include <cassert>
 #include <stdexcept>
+#include <variant>
 
+#include "circuit_escape/cells.hpp"
 #include "circuit_escape/position.hpp"
+
+// CellTraits se verifica al compilar: plantilla general, especialización total
+// (Wall) y parcial (ResourceCell con cualquier tipo de recompensa).
+static_assert(CellTraits<Empty>::traversable && !CellTraits<Empty>::collectible);
+static_assert(CellTraits<RoughTerrain>::traversable && !CellTraits<RoughTerrain>::collectible);
+static_assert(CellTraits<Battery>::traversable && !CellTraits<Battery>::collectible);
+static_assert(CellTraits<Trap>::traversable && !CellTraits<Trap>::collectible);
+static_assert(CellTraits<Exit>::traversable && !CellTraits<Exit>::collectible);
+static_assert(!CellTraits<Wall>::traversable && !CellTraits<Wall>::collectible);
+static_assert(CellTraits<ResourceCell<int>>::traversable);
+static_assert(CellTraits<ResourceCell<int>>::collectible);
+static_assert(CellTraits<ResourceCell<double>>::collectible);
 
 namespace {
     void testPositionEquality() {
@@ -76,6 +90,52 @@ namespace {
         assert(toString(position) == "(10,24)");
         assert(toString(Position{}) == "(0,0)");
     }
+
+    void testCellDefaults() {
+        const Cell cell{};
+        assert(std::holds_alternative<Empty>(cell));
+
+        const RoughTerrain rough{};
+        assert(rough.energyCost == 2);
+
+        const Battery battery{};
+        assert(battery.energy == 3);
+        assert(!battery.consumed);
+
+        const Trap trap{};
+        assert(trap.energyPenalty == 2);
+        assert(trap.scorePenalty == 1);
+
+        const ResourceCell<int> resource{10};
+        assert(resource.reward == 10);
+        assert(!resource.collected);
+    }
+
+    void testTraitsThroughCell() {
+        assert(isTraversable(Cell{Empty{}}));
+        assert(!isTraversable(Cell{Wall{}}));
+        assert(isTraversable(Cell{RoughTerrain{}}));
+        assert(isTraversable(Cell{ResourceCell<int>{10}}));
+        assert(isTraversable(Cell{Battery{}}));
+        assert(isTraversable(Cell{Trap{}}));
+        assert(isTraversable(Cell{Exit{}}));
+
+        assert(!isCollectible(Cell{Empty{}}));
+        assert(!isCollectible(Cell{Wall{}}));
+        assert(!isCollectible(Cell{RoughTerrain{}}));
+        assert(isCollectible(Cell{ResourceCell<int>{10}}));
+        assert(!isCollectible(Cell{Battery{}}));
+        assert(!isCollectible(Cell{Trap{}}));
+        assert(!isCollectible(Cell{Exit{}}));
+    }
+
+    void testCollectedResourceStillCounts() {
+        Cell cell = ResourceCell<int>{10};
+        std::get<ResourceCell<int>>(cell).collected = true;
+        // El rasgo depende del tipo, no del estado: sirve para contar el total del mapa
+        assert(isCollectible(cell));
+        assert(isTraversable(cell));
+    }
 }
 
 int main() {
@@ -85,5 +145,8 @@ int main() {
     testNeighborIgnoresBoardSize();
     testNeighborRejectsUnknownAction();
     testToString();
+    testCellDefaults();
+    testTraitsThroughCell();
+    testCollectedResourceStillCounts();
     return 0;
 }
