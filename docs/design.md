@@ -198,6 +198,20 @@ El parser valida solo el formato: cantidad de filas, longitud de cada fila, sím
 exactamente un `@`. Que exista una sola salida es precondición del entorno (§5.7), así que un mapa
 con dos salidas se convierte sin error y lo rechaza `NavigationEnvironment`.
 
+Los dos escenarios de demostración están en `assets/maps/`. Ambos conservan el borde de muros,
+empiezan en (1,1) y terminan en (18,28), y tienen tres recursos, dos baterías, trampas y terreno
+elevado. `scenario_01` separa dos salas con muros de dos puertas cada uno, y `scenario_02` rodea un
+bloque central macizo: en los dos casos hay al menos dos rutas parciales alternativas.
+
+La solución está comprobada con pruebas, no con un algoritmo dentro del programa: `ScenariosTest`
+reproduce dos rutas fijas por mapa con `step` y exige terminar en `goalReached` con energía
+positiva. Las rutas se calcularon una sola vez con un script de apoyo, fuera del repositorio,
+porque §9 deja la búsqueda de caminos fuera de alcance. Con el perfil `standard` la ruta más corta
+cuesta 44 de energía de las 60 disponibles en los dos mapas, y las alternativas 47 y 44.
+
+La ruta de `assets/maps/` llega a la aplicación y a las pruebas como definición de compilación
+desde CMake, así que no depende del directorio desde el que se ejecute el programa.
+
 Pendiente para la interfaz (Etapa 9): la tabla de símbolos está hoy solo en `cellFromSymbol`. El
 modo ASCII necesita el mapeo inverso, de celda a carácter, así que conviene compartir una única
 tabla en lugar de escribir la correspondencia dos veces.

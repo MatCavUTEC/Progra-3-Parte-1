@@ -42,6 +42,7 @@ add_executable(navigation_game
         app/main.cpp
 )
 target_link_libraries(navigation_game PRIVATE circuit_escape_core ftxui::ftxui)
+target_compile_definitions(navigation_game PRIVATE CIRCUIT_ESCAPE_MAPS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/maps")
 
 # Pruebas Unitarias explícitas (tests/)
 enable_testing()
@@ -61,6 +62,11 @@ add_test(NAME InteractionsTest COMMAND interactions_test)
 add_executable(algorithms_test tests/algorithms_test.cpp)
 target_link_libraries(algorithms_test PRIVATE circuit_escape_core)
 add_test(NAME AlgorithmsTest COMMAND algorithms_test)
+
+add_executable(scenarios_test tests/scenarios_test.cpp)
+target_link_libraries(scenarios_test PRIVATE circuit_escape_core)
+target_compile_definitions(scenarios_test PRIVATE CIRCUIT_ESCAPE_MAPS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/maps")
+add_test(NAME ScenariosTest COMMAND scenarios_test)
 
 add_executable(controllers_test tests/controllers_test.cpp)
 target_link_libraries(controllers_test PRIVATE circuit_escape_core)
