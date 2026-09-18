@@ -107,7 +107,7 @@ public:
             const int entryCost = entryCostOf(grid_.at(agent_));
             appendEvents(events, MovedEvent{from, agent_, entryCost});
             spendEnergy(entryCost, events);
-            // Etapa 6: aquí se aplicará el efecto de la celda destino
+            applyCellEffect(events);
         } else {
             appendEvents(events, MovementRejectedEvent{agent_, action});
             spendEnergy(rules_.rejectedMoveCost, events);
@@ -139,6 +139,41 @@ private:
                               [this](const auto&) { return rules_.moveCost; },
                           },
                           cell);
+    }
+
+    // Efecto de la celda a la que acaba de entrar el agente. Se aplica aunque el
+    // costo de entrada haya dejado la energía en cero, así que una batería todavía
+    // puede recargar. Cada tipo de celda tiene su lambda, incluidos los que no
+    // hacen nada, para que un tipo nuevo no pase inadvertido.
+    void applyCellEffect(std::vector<NavigationEvent>& events) {
+        std::visit(Overloaded{
+                       [](Empty&) {},
+                       [](Wall&) {},          // el agente nunca entra a un muro
+                       [](RoughTerrain&) {},  // su costo ya se cobró al entrar
+                       [this, &events](ResourceCell<int>& resource) {
+                           if (resource.collected) {
+                               return;
+                           }
+                           resource.collected = true;
+                           score_ += resource.reward;
+                           ++collectedResources_;
+                           appendEvents(events, ResourceCollectedEvent{agent_, resource.reward});
+                       },
+                       [this, &events](Battery& battery) {
+                           if (battery.consumed) {
+                               return;
+                           }
+                           battery.consumed = true;
+                           changeEnergy(battery.energy, events);
+                       },
+                       [this, &events](Trap& trap) {
+                           appendEvents(events, TrapTriggeredEvent{agent_});
+                           changeEnergy(-trap.energyPenalty, events);
+                           score_ -= trap.scorePenalty;  // el puntaje puede quedar negativo
+                       },
+                       [](Exit&) {},  // la victoria se decide al comprobar el término
+                   },
+                   grid_.at(agent_));
     }
 
     void spendEnergy(const int cost, std::vector<NavigationEvent>& events) { changeEnergy(-cost, events); }
