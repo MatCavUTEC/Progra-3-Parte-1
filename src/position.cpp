@@ -21,6 +21,13 @@ std::optional<Position> neighbor(const Position origin, const Action action) {
     throw std::invalid_argument("neighbor: acción no válida");
 }
 
+std::size_t manhattanDistance(const Position from, const Position to) {
+    // Las coordenadas no tienen signo: se resta siempre la menor de la mayor
+    const std::size_t rows = from.row < to.row ? to.row - from.row : from.row - to.row;
+    const std::size_t columns = from.column < to.column ? to.column - from.column : from.column - to.column;
+    return rows + columns;
+}
+
 std::string toString(const Position position) {
     return "(" + std::to_string(position.row) + "," + std::to_string(position.column) + ")";
 }
