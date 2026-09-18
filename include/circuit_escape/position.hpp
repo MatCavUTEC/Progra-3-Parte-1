@@ -17,3 +17,6 @@ enum class Action { up, down, left, right, wait };
 [[nodiscard]] std::optional<Position> neighbor(Position origin, Action action);
 
 [[nodiscard]] std::string toString(Position position);
+
+// Distancia en pasos horizontales y verticales, sin diagonales.
+[[nodiscard]] std::size_t manhattanDistance(Position from, Position to);

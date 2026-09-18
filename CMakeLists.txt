@@ -65,3 +65,11 @@ add_test(NAME AlgorithmsTest COMMAND algorithms_test)
 add_executable(controllers_test tests/controllers_test.cpp)
 target_link_libraries(controllers_test PRIVATE circuit_escape_core)
 add_test(NAME ControllersTest COMMAND controllers_test)
+
+# Prueba negativa de compilación (§8): el objetivo no forma parte de la
+# compilación normal y la prueba pasa justamente cuando no compila.
+add_executable(bad_policy EXCLUDE_FROM_ALL tests/compile_fail/bad_policy.cpp)
+target_link_libraries(bad_policy PRIVATE circuit_escape_core)
+add_test(NAME BadPolicyDoesNotCompile
+        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target bad_policy --config $<CONFIG>)
+set_tests_properties(BadPolicyDoesNotCompile PROPERTIES WILL_FAIL TRUE)
