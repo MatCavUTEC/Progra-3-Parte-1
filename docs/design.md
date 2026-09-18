@@ -100,6 +100,29 @@ y ambos consultan un único límite privado (`isInside`) para que no puedan disc
 Quedaron fuera `totalCost` y `anyTrue`, que el plan daba como alternativas: ningún punto del motor
 los necesita y §6.1 pide que los templates se usen.
 
+### Resolución de un turno
+
+`step` sigue el orden obligatorio de §5.5: incrementar el turno; si la acción es inválida, cobrar
+`rejectedMoveCost` y pasar al término; si es `wait`, cobrar `waitCost` sin activar ninguna celda;
+si el movimiento es válido, actualizar la posición, cobrar el costo de entrada y aplicar el efecto
+de la celda; y comprobar el término con la precedencia `goalReached`, `noEnergy`, `turnLimit`.
+
+Tres detalles que el enunciado deja abiertos:
+
+- **Orden de los eventos en un intento inválido.** §5.5 menciona el descuento antes del evento de
+  rechazo. Aquí se emite `MovementRejectedEvent` y después `EnergyChangedEvent`, igual que un
+  movimiento válido emite `MovedEvent` y luego su costo: primero qué pasó, después cuánto costó.
+- **`EnergyChangedEvent` solo se emite si la energía cambió.** Los costos son configurables y
+  pueden valer cero, y un evento que informa "de 60 a 60" no describe ningún cambio.
+- **`MovedEvent::energyCost` informa el costo configurado de la celda**, no lo que se descontó
+  después de recortar la energía a cero. Ese recorte se ve en `EnergyChangedEvent`.
+
+La energía máxima de la observación es la energía inicial del perfil, como indica la tabla de §5.5,
+y toda modificación se recorta al intervalo entre cero y ese máximo.
+
+`availableActions` devuelve `wait` más las direcciones que producirían un desplazamiento válido, y
+una lista vacía cuando la partida terminó: si `step` ya no se puede llamar, no hay acción legal.
+
 ### Recursos y baterías consumidos
 
 Se marcan con `collected` / `consumed` en lugar de reemplazar la celda por `Empty` (§5.7 admite
@@ -163,5 +186,5 @@ Se sigue §5.7:
 | Especialización total y parcial (§6.3) | `CellTraits<Wall>` (total) y `CellTraits<ResourceCell<Reward>>` (parcial) en `include/circuit_escape/cells.hpp`; usadas por `isTraversable` e `isCollectible` en `src/cells.cpp` |
 | Paquete variádico y fold expression (§6.4) | `appendEvents` (fold sobre el operador coma) y `Overloaded` en `include/circuit_escape/algorithms.hpp` |
 | Concept, interfaz virtual y adaptador genérico (§6.5) | Pendiente |
-| Biblioteca estándar (§6.6) | Pendiente |
+| Biblioteca estándar (§6.6) | `std::array` en `grid.hpp`; `std::variant` y `std::visit` en `cells.hpp` y `environment.hpp`; `std::optional` en `position.hpp`, `algorithms.hpp` y `game_rules.hpp`; `std::vector` para eventos y acciones |
 | Prueba negativa de compilación (§8) | Pendiente |
