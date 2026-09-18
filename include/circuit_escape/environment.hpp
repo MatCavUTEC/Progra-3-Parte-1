@@ -87,6 +87,7 @@ public:
 
     [[nodiscard]] bool isFinished() const noexcept { return finished_; }
     [[nodiscard]] const GameRules& rules() const noexcept { return rules_; }
+    [[nodiscard]] EndReason endReason() const noexcept { return reason_; }
     [[nodiscard]] const grid_type& grid() const noexcept { return grid_; }
     [[nodiscard]] std::uint32_t seed() const noexcept { return seed_; }
 

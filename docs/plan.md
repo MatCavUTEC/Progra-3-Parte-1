@@ -15,7 +15,7 @@ marca aquí con su commit de merge. La justificación de cada decisión está en
 - [x] **Etapa 7** — `feature/controllers` — completa (tag `etapa-7`)
 - [x] **Etapa 8** — `feature/scenarios` — completa (tag `etapa-8`)
 - [x] **Etapa 9** — `feature/console-ui` — completa (tag `etapa-9`)
-- [ ] **Etapa 10** — `feature/auto-simulation`
+- [x] **Etapa 10** — `feature/auto-simulation` — completa (tag `etapa-10`)
 - [ ] **Etapa 11** — `docs/delivery`
 
 Correspondencia con el plan sugerido del enunciado (§11): semana 1 → etapas 0–2, semana 2 → 3–6,
@@ -261,9 +261,18 @@ batería consumida se sigue dibujando y si el tablero no dibuja al agente.
   desconocido sin modificar el entorno, símbolos emoji y ASCII de todas las celdas y del agente, y
   renderizado de 20 filas con 30 celdas cada una.
 
-### Etapa 10 — `feature/auto-simulation`
+### Etapa 10 — `feature/auto-simulation` ✅ completa
 
 Secciones: §7, §10.2 (simulación reproducible).
+
+Hecho: `include/circuit_escape/simulation.hpp` con `SimulationSummary`, `summaryOf` y
+`runSimulation`; `endReason()` en el entorno; y las opciones `--auto`, `--seed` y `--help` en
+`main.cpp`. Pruebas en `scenarios_test.cpp`: misma semilla y mismo resumen, la heurística completa
+los dos escenarios en 44 turnos, llegar a la salida sin energía no cuenta como completada, y toda
+simulación termina dentro del límite de turnos. Verificado: `ctest` 8/8, sin advertencias con
+`-Wall -Wextra -Wpedantic -Wconversion -Wshadow`, y las pruebas fallan si la semilla deja de mandar
+o si `completed` se decide por la posición del agente en vez del motivo del término.
+
 
 - Modo `--auto random|heuristic --seed N`: juega sin interfaz interactiva y muestra el resumen
   (completada o no, turnos, energía restante, recursos y puntaje).

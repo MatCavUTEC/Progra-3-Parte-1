@@ -5,26 +5,36 @@
 // Único archivo que abre una pantalla: el resto de la interfaz solo construye
 // elementos y traduce eventos, así que puede probarse sin terminal.
 
+#include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/screen_interactive.hpp>
 
+#include "circuit_escape/controllers.hpp"
+#include "circuit_escape/simulation.hpp"
 #include "console_ui.hpp"
 #include "game_session.hpp"
 
 namespace {
+    enum class AutoPolicy { none, random, heuristic };
+
     struct Options {
         Difficulty difficulty{Difficulty::standard};
         RenderMode mode{RenderMode::emoji};
         int map{1};
+        AutoPolicy autoPolicy{AutoPolicy::none};
+        std::uint32_t seed{0};
+        bool help{false};
     };
 
     void printUsage() {
-        std::cout << "Uso: navigation_game [--difficulty easy|standard|hard] [--ascii] [--map 1|2]\n";
+        std::cout << "Uso: navigation_game [--difficulty easy|standard|hard] [--ascii] [--map 1|2]\n"
+                  << "                     [--auto random|heuristic] [--seed N] [--help]\n";
     }
 
     // Devuelve false si los argumentos no son válidos
@@ -47,6 +57,26 @@ namespace {
                     return false;
                 }
                 options.map = value == "1" ? 1 : 2;
+            } else if (argument == "--auto" && index + 1 < arguments.size()) {
+                const std::string& value = arguments[++index];
+                if (value == "random") {
+                    options.autoPolicy = AutoPolicy::random;
+                } else if (value == "heuristic") {
+                    options.autoPolicy = AutoPolicy::heuristic;
+                } else {
+                    std::cout << "Controlador desconocido: " << value << "\n";
+                    return false;
+                }
+            } else if (argument == "--seed" && index + 1 < arguments.size()) {
+                const std::string& value = arguments[++index];
+                try {
+                    options.seed = static_cast<std::uint32_t>(std::stoul(value));
+                } catch (const std::exception&) {
+                    std::cout << "Semilla no válida: " << value << "\n";
+                    return false;
+                }
+            } else if (argument == "--help") {
+                options.help = true;
             } else {
                 return false;
             }
@@ -72,15 +102,30 @@ namespace {
         return lines;
     }
 
-    void printSummary(const DemoEnvironment& environment) {
-        const Observation observation = environment.state();
-        std::cout << "Partida terminada\n"
-                  << "  Completada: " << (environment.isFinished() &&
-                                          observation.agent == observation.goal ? "si" : "no") << "\n"
-                  << "  Turnos: " << observation.turn << "\n"
-                  << "  Energia restante: " << observation.energy << "/" << observation.maximumEnergy << "\n"
-                  << "  Recursos: " << observation.collectedResources << "\n"
-                  << "  Puntaje: " << observation.score << "\n";
+    std::string reasonText(const EndReason reason) {
+        switch (reason) {
+            case EndReason::goalReached: return "salida alcanzada";
+            case EndReason::noEnergy: return "sin energia";
+            case EndReason::turnLimit: return "limite de turnos";
+            case EndReason::none: return "partida sin terminar";
+        }
+        return "desconocido";
+    }
+
+    void printSummary(const SimulationSummary& summary) {
+        std::cout << "Partida completada: " << (summary.completed ? "si" : "no") << "\n"
+                  << "Motivo: " << reasonText(summary.reason) << "\n"
+                  << "Turnos: " << summary.turns << "\n"
+                  << "Energia restante: " << summary.energy << "/" << summary.maximumEnergy << "\n"
+                  << "Recursos: " << summary.collectedResources << "\n"
+                  << "Puntaje: " << summary.score << "\n";
+    }
+
+    std::unique_ptr<IController> makeController(const AutoPolicy policy, const std::uint32_t seed) {
+        if (policy == AutoPolicy::random) {
+            return std::make_unique<PolicyController<RandomPolicy>>(RandomPolicy{seed});
+        }
+        return std::make_unique<PolicyController<HeuristicPolicy>>(HeuristicPolicy{});
     }
 }
 
@@ -91,6 +136,10 @@ int main(int argc, char* argv[]) {
         printUsage();
         return 1;
     }
+    if (options.help) {
+        printUsage();
+        return 0;
+    }
 
     const GameRules rules = rulesFor(options.difficulty);
     const std::string path = std::string{CIRCUIT_ESCAPE_MAPS_DIR} +
@@ -98,6 +147,18 @@ int main(int argc, char* argv[]) {
 
     try {
         const Scenario<20, 30> scenario = parseScenario<20, 30>(readMapFile(path), rules);
+
+        // Simulación automática: juega sola, sin abrir pantalla (§7, §10.2)
+        if (options.autoPolicy != AutoPolicy::none) {
+            DemoEnvironment environment{scenario.grid, scenario.start, rules};
+            environment.reset(options.seed);
+            const std::unique_ptr<IController> controller = makeController(options.autoPolicy, options.seed);
+            printSummary(runSimulation(environment, *controller));
+            std::cout << "Controlador: " << (options.autoPolicy == AutoPolicy::random ? "random" : "heuristic")
+                      << " | Semilla: " << options.seed << "\n";
+            return 0;
+        }
+
         GameSession session{DemoEnvironment{scenario.grid, scenario.start, rules}};
         const ConsoleUI ui{options.mode};
 
@@ -142,7 +203,7 @@ int main(int argc, char* argv[]) {
         });
 
         screen.Loop(component);
-        printSummary(session.environment());
+        printSummary(summaryOf(session.environment()));
         return 0;
     } catch (const std::exception& error) {
         std::cout << "Error: " << error.what() << "\n";
