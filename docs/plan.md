@@ -11,7 +11,7 @@ marca aquí con su commit de merge. La justificación de cada decisión está en
 - [x] **Etapa 3** — `feature/game-rules` — completa (tag `etapa-3`)
 - [x] **Etapa 4** — `feature/algorithms` — completa (tag `etapa-4`)
 - [x] **Etapa 5** — `feature/environment-core` — completa (tag `etapa-5`)
-- [ ] **Etapa 6** — `feature/cell-interactions`
+- [x] **Etapa 6** — `feature/cell-interactions` — completa (tag `etapa-6`)
 - [ ] **Etapa 7** — `feature/controllers`
 - [ ] **Etapa 8** — `feature/scenarios`
 - [ ] **Etapa 9** — `feature/console-ui`
@@ -171,9 +171,19 @@ gane a la meta y al cobrar el terreno elevado como una celda normal.
   muro, en una esquina y después del término; término por energía y por turnos; precedencia;
   precondiciones del constructor.
 
-### Etapa 6 — `feature/cell-interactions`
+### Etapa 6 — `feature/cell-interactions` ✅ completa
 
 Secciones: §5.5 (efectos y orden obligatorio), §6.4.
+
+Hecho: `applyCellEffect` en `environment.hpp`, con un lambda por tipo de celda. Pruebas en
+`interactions_test.cpp`: recurso una sola vez, orden de los eventos al recogerlo, batería una sola
+vez, recarga recortada al máximo, recuperación tras un costo de entrada que dejó la energía en
+cero, trampa repetida con ambas penalizaciones, `wait` que no activa la celda actual, valores según
+el perfil, `reset` que devuelve las celdas consumidas, llegada a la salida y procesamiento de los
+seis tipos de evento. Verificado: `ctest` 5/5, sin advertencias con `-Wall -Wextra -Wpedantic
+-Wconversion -Wshadow`, y las pruebas fallan al permitir recoger un recurso dos veces, al consumir
+la trampa y al aplicar el efecto antes del costo de entrada.
+
 
 - Efectos con `std::visit` y `Overloaded`:
   - recurso: solo la primera vez;

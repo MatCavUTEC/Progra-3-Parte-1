@@ -123,6 +123,23 @@ y toda modificación se recorta al intervalo entre cero y ese máximo.
 `availableActions` devuelve `wait` más las direcciones que producirían un desplazamiento válido, y
 una lista vacía cuando la partida terminó: si `step` ya no se puede llamar, no hay acción legal.
 
+### Efectos de las celdas
+
+`applyCellEffect` visita la celda de destino con `std::visit` y `Overloaded`, sobre una referencia
+modificable, porque el efecto marca la propia celda:
+
+- recurso: la primera vez marca `collected`, suma su recompensa al puntaje, incrementa el contador
+  de recursos y emite `ResourceCollectedEvent`;
+- batería: la primera vez marca `consumed` y recarga con `changeEnergy`, que recorta al máximo;
+- trampa: en cada entrada emite `TrapTriggeredEvent`, resta energía y resta puntaje, que puede
+  quedar negativo;
+- espacio libre, muro, terreno elevado y salida: sin efecto. El costo del terreno elevado ya se
+  cobró al entrar, y la victoria se decide al comprobar el término.
+
+Los cuatro casos sin efecto se escriben igual que los demás, en lugar de un `[](auto&) {}` que los
+cubra a todos: así, agregar un tipo de celda produce un error de compilación en vez de un efecto
+que falta en silencio.
+
 ### Recursos y baterías consumidos
 
 Se marcan con `collected` / `consumed` en lugar de reemplazar la celda por `Empty` (§5.7 admite
@@ -184,7 +201,7 @@ Se sigue §5.7:
 | `Grid<Cell, Rows, Columns>` con `std::array` e iteradores (§5.1, §6.2) | `include/circuit_escape/grid.hpp` |
 | Templates de función con iteradores (§6.1) | `countMatching` y `minimumBy` (rangos por iteradores) y `findPosition` (recibe el tablero) en `include/circuit_escape/algorithms.hpp` |
 | Especialización total y parcial (§6.3) | `CellTraits<Wall>` (total) y `CellTraits<ResourceCell<Reward>>` (parcial) en `include/circuit_escape/cells.hpp`; usadas por `isTraversable` e `isCollectible` en `src/cells.cpp` |
-| Paquete variádico y fold expression (§6.4) | `appendEvents` (fold sobre el operador coma) y `Overloaded` en `include/circuit_escape/algorithms.hpp` |
+| Paquete variádico y fold expression (§6.4) | `appendEvents` (fold sobre el operador coma) y `Overloaded` en `include/circuit_escape/algorithms.hpp`; `Overloaded` se usa con `std::visit` en `environment.hpp`, para el costo de entrada y los efectos de celda |
 | Concept, interfaz virtual y adaptador genérico (§6.5) | Pendiente |
 | Biblioteca estándar (§6.6) | `std::array` en `grid.hpp`; `std::variant` y `std::visit` en `cells.hpp` y `environment.hpp`; `std::optional` en `position.hpp`, `algorithms.hpp` y `game_rules.hpp`; `std::vector` para eventos y acciones |
 | Prueba negativa de compilación (§8) | Pendiente |
