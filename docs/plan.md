@@ -14,7 +14,7 @@ marca aquí con su commit de merge. La justificación de cada decisión está en
 - [x] **Etapa 6** — `feature/cell-interactions` — completa (tag `etapa-6`)
 - [x] **Etapa 7** — `feature/controllers` — completa (tag `etapa-7`)
 - [x] **Etapa 8** — `feature/scenarios` — completa (tag `etapa-8`)
-- [ ] **Etapa 9** — `feature/console-ui`
+- [x] **Etapa 9** — `feature/console-ui` — completa (tag `etapa-9`)
 - [ ] **Etapa 10** — `feature/auto-simulation`
 - [ ] **Etapa 11** — `docs/delivery`
 
@@ -236,9 +236,19 @@ hueco en el borde.
 - Pruebas (`tests/scenarios_test.cpp`, nuevo): dimensiones, una sola salida, inicio válido y una
   secuencia de acciones fija que llega a la meta con `standard` (solución comprobada).
 
-### Etapa 9 — `feature/console-ui`
+### Etapa 9 — `feature/console-ui` ✅ completa
 
 Secciones: §5.8, §8 (pruebas de consola).
+
+Hecho: `app/console_ui.{hpp,cpp}`, `app/game_session.{hpp,cpp}` y `app/main.cpp`, con la biblioteca
+`circuit_escape_ui` en CMake. `tests/console_ui_test.cpp` (`ConsoleUiTest`, octava prueba) cubre la
+traducción de teclas y flechas sin distinguir mayúsculas, el rechazo de teclas desconocidas sin
+tocar el entorno, los glifos emoji y ASCII de las siete celdas y del agente, las celdas ya usadas
+dibujadas como espacio libre, las 20 filas de 30 celdas, la barra de estado, los seis eventos y el
+render en una pantalla en memoria. Verificado: `ctest` 8/8, sin advertencias con `-Wall -Wextra
+-Wpedantic -Wconversion -Wshadow`, y las pruebas fallan si `translate` distingue mayúsculas, si una
+batería consumida se sigue dibujando y si el tablero no dibuja al agente.
+
 
 - `app/console_ui.{hpp,cpp}`: `UiCommand`, `RenderMode` y `ConsoleUI`.
   - `translate`: W, A, S, D, E, H, Q y flechas, sin distinguir mayúsculas.

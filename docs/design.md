@@ -226,9 +226,33 @@ Además de las cinco de §10.1:
 
 ### Interfaz de consola
 
-`ConsoleUI` vive en `app/console_ui.hpp` y `app/console_ui.cpp`, compilado como biblioteca enlazada
-a FTXUI que usan `navigation_game` y `tests/console_ui_test.cpp`. Es la única prueba que depende de
-FTXUI, porque §8 exige probar la traducción de comandos y el renderizado.
+`ConsoleUI` vive en `app/console_ui.hpp` y `app/console_ui.cpp`, compilado como biblioteca
+(`circuit_escape_ui`) enlazada a FTXUI que usan `navigation_game` y `tests/console_ui_test.cpp`. Es
+la única prueba que depende de FTXUI, porque §8 exige probar la traducción de comandos y el
+renderizado. La presentación queda en tres niveles:
+
+- **Sin FTXUI:** `glyphFor`, `agentGlyph`, `boardGlyphs`, `statusLine` y `describeEvent` devuelven
+  texto y se prueban comparando cadenas.
+- **Con tipos de FTXUI pero sin pantalla:** `translate` recibe un `ftxui::Event` y `render` y `help`
+  devuelven un `ftxui::Element`. Las pruebas los dibujan en una pantalla en memoria con
+  `ftxui::Screen::Create` y `ftxui::Render`, y comparan el texto de `ToString`, que termina cada
+  línea con `\r\n`.
+- **Con pantalla:** solo `app/main.cpp`, con `ScreenInteractive`, `CatchEvent` y `Loop`. Ningún
+  ejecutable de prueba lo compila.
+
+`GameSession` (`app/game_session.hpp`) aplica un `UiCommand` al entorno y devuelve qué ocurrió, así
+que la prueba de "una tecla desconocida no modifica el entorno" es real: `translate` devuelve
+`nullopt`, no se aplica nada y el turno sigue en cero. La interfaz entrega la acción directamente a
+`step`, como permite §5.7; `HumanPolicy` queda disponible para un controlador humano detrás de
+`IController`.
+
+Dos detalles que aparecieron al implementar:
+
+- **FTXUI define su propio `ftxui::Cell`**, así que `console_ui.cpp` no usa `using namespace ftxui`:
+  con esa directiva nuestras celdas dejaban de resolverse. Los nombres de la biblioteca van
+  calificados.
+- **La barra de estado necesita el límite de turnos**, que no está en la observación, así que
+  `NavigationEnvironment` expone `rules()` como vista de solo lectura de su configuración.
 
 ### `reset(seed)`
 
