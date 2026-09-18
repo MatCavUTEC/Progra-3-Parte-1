@@ -13,7 +13,7 @@ marca aquí con su commit de merge. La justificación de cada decisión está en
 - [x] **Etapa 5** — `feature/environment-core` — completa (tag `etapa-5`)
 - [x] **Etapa 6** — `feature/cell-interactions` — completa (tag `etapa-6`)
 - [x] **Etapa 7** — `feature/controllers` — completa (tag `etapa-7`)
-- [ ] **Etapa 8** — `feature/scenarios`
+- [x] **Etapa 8** — `feature/scenarios` — completa (tag `etapa-8`)
 - [ ] **Etapa 9** — `feature/console-ui`
 - [ ] **Etapa 10** — `feature/auto-simulation`
 - [ ] **Etapa 11** — `docs/delivery`
@@ -219,9 +219,16 @@ consume su acción y si `manhattanDistance` ignora las columnas.
   fallo esperado).
 - Referencia de estilo: `RuleSet` / `RuleModel`.
 
-### Etapa 8 — `feature/scenarios`
+### Etapa 8 — `feature/scenarios` ✅ completa
 
 Secciones: §5.1 (escenario 20 × 30), §10.2, §13.
+
+Hecho: los dos mapas en `assets/maps/`, la ruta a esa carpeta como definición de compilación, y
+`tests/scenarios_test.cpp` (`ScenariosTest`, séptima prueba) con la forma de cada mapa y dos rutas
+fijas por mapa. Verificado: `ctest` 7/7, sin advertencias con `-Wall -Wextra -Wpedantic
+-Wconversion -Wshadow`, y las pruebas fallan al poner un muro en medio de una ruta y al abrir un
+hueco en el borde.
+
 
 - `assets/maps/scenario_01.txt` y `scenario_02.txt`: 20 × 30, borde de muros, al menos dos rutas
   parciales alternativas, legibles.
