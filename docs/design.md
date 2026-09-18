@@ -140,6 +140,43 @@ Los cuatro casos sin efecto se escriben igual que los demás, en lugar de un `[]
 cubra a todos: así, agregar un tipo de celda produce un error de compilación en vez de un efecto
 que falta en silencio.
 
+### Controladores y políticas
+
+§6.5 pide explicar cuatro cosas de este diseño:
+
+- **Qué verifica el concept.** `NavigationPolicy<Policy>` exige que
+  `policy.selectAction(observation, actions)` exista y devuelva exactamente `Action`, con la
+  observación por referencia const y las acciones legales como `std::span<const Action>`.
+- **Qué clase es genérica.** `PolicyController<Policy>`, que guarda la política por valor y la
+  adapta a la interfaz virtual. Es el mismo patrón de `RuleSet` / `RuleModel` de la tarea 4.
+- **Dónde ocurre el despacho dinámico.** En `IController::selectAction`, que la aplicación llama a
+  través de un `std::unique_ptr<IController>`. Cambiar de controlador en ejecución es cambiar el
+  puntero.
+- **Por qué no hay condicionales por tipo.** El entorno nunca pregunta qué controlador lo maneja:
+  recibe una `Action` y la resuelve igual venga de quien venga. No hay `typeid` ni `dynamic_cast`
+  en ninguna capa.
+
+`RandomPolicy` posee su propio `std::mt19937` con semilla, que es lo que hace reproducible una
+simulación. `HeuristicPolicy` descarta `wait` y elige el movimiento legal que deja la menor
+distancia Manhattan a la salida, con `minimumBy`; solo espera si no hay ningún movimiento posible.
+No busca el camino óptimo y puede quedar oscilando frente a un callejón, que es lo que §5.6
+admite. `HumanPolicy` guarda la acción que le entrega la interfaz y la consume al usarla: pedir dos
+decisiones sin una nueva pulsación es un error de precondición.
+
+### Prueba negativa de compilación
+
+`tests/compile_fail/bad_policy.cpp` intenta adaptar una política cuyo `selectAction` devuelve
+`void`. El objetivo `bad_policy` está fuera de la compilación normal (`EXCLUDE_FROM_ALL`) y CTest
+lo construye en la prueba `BadPolicyDoesNotCompile`, que tiene `WILL_FAIL`: la prueba pasa
+justamente porque no compila. El diagnóstico de GCC 15.2 empieza así:
+
+```
+error: template constraint failure for 'template<class Policy>
+       requires NavigationPolicy<Policy> class PolicyController'
+note: constraints not satisfied
+note: required for the satisfaction of 'NavigationPolicy<Policy>' [with Policy = BadPolicy]
+```
+
 ### Recursos y baterías consumidos
 
 Se marcan con `collected` / `consumed` en lugar de reemplazar la celda por `Empty` (§5.7 admite
@@ -202,6 +239,6 @@ Se sigue §5.7:
 | Templates de función con iteradores (§6.1) | `countMatching` y `minimumBy` (rangos por iteradores) y `findPosition` (recibe el tablero) en `include/circuit_escape/algorithms.hpp` |
 | Especialización total y parcial (§6.3) | `CellTraits<Wall>` (total) y `CellTraits<ResourceCell<Reward>>` (parcial) en `include/circuit_escape/cells.hpp`; usadas por `isTraversable` e `isCollectible` en `src/cells.cpp` |
 | Paquete variádico y fold expression (§6.4) | `appendEvents` (fold sobre el operador coma) y `Overloaded` en `include/circuit_escape/algorithms.hpp`; `Overloaded` se usa con `std::visit` en `environment.hpp`, para el costo de entrada y los efectos de celda |
-| Concept, interfaz virtual y adaptador genérico (§6.5) | Pendiente |
+| Concept, interfaz virtual y adaptador genérico (§6.5) | `NavigationPolicy`, `IController` y `PolicyController` en `include/circuit_escape/controllers.hpp`; políticas en `src/controllers.cpp` |
 | Biblioteca estándar (§6.6) | `std::array` en `grid.hpp`; `std::variant` y `std::visit` en `cells.hpp` y `environment.hpp`; `std::optional` en `position.hpp`, `algorithms.hpp` y `game_rules.hpp`; `std::vector` para eventos y acciones |
-| Prueba negativa de compilación (§8) | Pendiente |
+| Prueba negativa de compilación (§8) | `tests/compile_fail/bad_policy.cpp`, registrada en CTest como `BadPolicyDoesNotCompile` con `WILL_FAIL` |

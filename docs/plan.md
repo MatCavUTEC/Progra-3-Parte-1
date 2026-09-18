@@ -12,7 +12,7 @@ marca aquí con su commit de merge. La justificación de cada decisión está en
 - [x] **Etapa 4** — `feature/algorithms` — completa (tag `etapa-4`)
 - [x] **Etapa 5** — `feature/environment-core` — completa (tag `etapa-5`)
 - [x] **Etapa 6** — `feature/cell-interactions` — completa (tag `etapa-6`)
-- [ ] **Etapa 7** — `feature/controllers`
+- [x] **Etapa 7** — `feature/controllers` — completa (tag `etapa-7`)
 - [ ] **Etapa 8** — `feature/scenarios`
 - [ ] **Etapa 9** — `feature/console-ui`
 - [ ] **Etapa 10** — `feature/auto-simulation`
@@ -195,9 +195,17 @@ la trampa y al aplicar el efecto antes del costo de entrada.
 - Pruebas (`interactions_test.cpp`): cada caso anterior, llegada a la salida y procesamiento de cada
   tipo de evento.
 
-### Etapa 7 — `feature/controllers`
+### Etapa 7 — `feature/controllers` ✅ completa
 
 Secciones: §5.6, §5.7 (controladores y políticas), §6.5, §8.
+
+Hecho: `controllers.hpp` y `src/controllers.cpp` con la interfaz, el concept, el adaptador y las
+tres políticas; `manhattanDistance` se agregó a `position.hpp`. La prueba negativa de compilación
+quedó registrada en CTest (`BadPolicyDoesNotCompile`, `WILL_FAIL`), así que ahora son seis pruebas.
+Verificado: `ctest` 6/6, sin advertencias con `-Wall -Wextra -Wpedantic -Wconversion -Wshadow`, y
+las pruebas fallan si la heurística devuelve siempre la primera acción, si la política humana no
+consume su acción y si `manhattanDistance` ignora las columnas.
+
 
 - `controllers.hpp`: `IController`, el concept `NavigationPolicy` y `PolicyController<Policy>`.
 - Políticas: `RandomPolicy` (`std::mt19937` con semilla), `HeuristicPolicy` (reduce la distancia
