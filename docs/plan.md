@@ -10,7 +10,7 @@ marca aquí con su commit de merge. La justificación de cada decisión está en
 - [x] **Etapa 2** — `feature/grid` — completa (tag `etapa-2`)
 - [x] **Etapa 3** — `feature/game-rules` — completa (tag `etapa-3`)
 - [x] **Etapa 4** — `feature/algorithms` — completa (tag `etapa-4`)
-- [ ] **Etapa 5** — `feature/environment-core`
+- [x] **Etapa 5** — `feature/environment-core` — completa (tag `etapa-5`)
 - [ ] **Etapa 6** — `feature/cell-interactions`
 - [ ] **Etapa 7** — `feature/controllers`
 - [ ] **Etapa 8** — `feature/scenarios`
@@ -147,9 +147,16 @@ Hecho:
 - Referencia de estilo: `countMatching`, `copyMatching`, `minimumBy`, `allTrue`, `makeContainer`,
   `Overloaded`.
 
-### Etapa 5 — `feature/environment-core`
+### Etapa 5 — `feature/environment-core` ✅ completa
 
 Secciones: §4, §5.3, §5.4, §5.7 (estado observable y entorno), §7.
+
+Hecho: `events.hpp` y `environment.hpp` con el ciclo de un turno; el paso de los efectos de celda
+queda marcado y se completa en la Etapa 6. `seed()` permite comprobar la semilla que guardó
+`reset`. Verificado: `ctest` 5/5, sin advertencias con `-Wall -Wextra -Wpedantic -Wconversion
+-Wshadow`, y las pruebas fallan al aceptar la meta sin energía, al dejar que el límite de turnos le
+gane a la meta y al cobrar el terreno elevado como una celda normal.
+
 
 - `events.hpp`: `Observation`, los seis eventos, `NavigationEvent`, `EndReason` y `StepResult`.
 - `environment.hpp`: `NavigationEnvironment<Rows, Columns>`.

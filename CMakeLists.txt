@@ -23,6 +23,7 @@ add_library(circuit_escape_core
         include/circuit_escape/algorithms.hpp
         include/circuit_escape/grid.hpp
         include/circuit_escape/cells.hpp
+        include/circuit_escape/events.hpp
         include/circuit_escape/environment.hpp
         include/circuit_escape/controllers.hpp
         include/circuit_escape/game_rules.hpp
