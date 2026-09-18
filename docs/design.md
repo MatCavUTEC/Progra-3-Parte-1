@@ -163,6 +163,21 @@ No busca el camino óptimo y puede quedar oscilando frente a un callejón, que e
 admite. `HumanPolicy` guarda la acción que le entrega la interfaz y la consume al usarla: pedir dos
 decisiones sin una nueva pulsación es un error de precondición.
 
+### Simulación automática
+
+`runSimulation` (`include/circuit_escape/simulation.hpp`) juega un episodio completo con cualquier
+`IController` y devuelve un `SimulationSummary`: si la partida se completó, el motivo del término,
+turnos, energía restante y máxima, recursos y puntaje. Vive en el motor porque no hace entrada ni
+salida, así que las pruebas lo usan sin FTXUI y una futura extensión de aprendizaje puede llamarlo
+igual. Imprimir el resumen es tarea de `app/main.cpp`.
+
+`completed` se decide por el motivo del término, no por la posición del agente: llegar a la salida
+con energía cero deja al agente sobre la meta pero la partida termina por `noEnergy` (§5.5).
+
+La aplicación acepta `--auto random|heuristic` y `--seed N`, que juegan sin abrir pantalla, además
+de `--difficulty`, `--map`, `--ascii` y `--help`. Con el perfil `standard`, la política heurística
+resuelve los dos escenarios en 44 turnos, y una semilla fija repite exactamente la misma partida.
+
 ### Prueba negativa de compilación
 
 `tests/compile_fail/bad_policy.cpp` intenta adaptar una política cuyo `selectAction` devuelve
