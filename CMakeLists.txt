@@ -37,11 +37,22 @@ add_library(circuit_escape_core
 )
 target_include_directories(circuit_escape_core PUBLIC include)
 
-# Aplicación ejecutable principal (app/main.cpp): única parte que usa FTXUI
+# Capa de presentación: única parte que usa FTXUI. No abre pantalla, así que
+# puede probarse sin una interfaz interactiva.
+add_library(circuit_escape_ui
+        app/console_ui.hpp
+        app/console_ui.cpp
+        app/game_session.hpp
+        app/game_session.cpp
+)
+target_include_directories(circuit_escape_ui PUBLIC app)
+target_link_libraries(circuit_escape_ui PUBLIC circuit_escape_core ftxui::ftxui)
+
+# Aplicación ejecutable principal (app/main.cpp): la que abre la pantalla
 add_executable(navigation_game
         app/main.cpp
 )
-target_link_libraries(navigation_game PRIVATE circuit_escape_core ftxui::ftxui)
+target_link_libraries(navigation_game PRIVATE circuit_escape_ui)
 target_compile_definitions(navigation_game PRIVATE CIRCUIT_ESCAPE_MAPS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/maps")
 
 # Pruebas Unitarias explícitas (tests/)
@@ -62,6 +73,10 @@ add_test(NAME InteractionsTest COMMAND interactions_test)
 add_executable(algorithms_test tests/algorithms_test.cpp)
 target_link_libraries(algorithms_test PRIVATE circuit_escape_core)
 add_test(NAME AlgorithmsTest COMMAND algorithms_test)
+
+add_executable(console_ui_test tests/console_ui_test.cpp)
+target_link_libraries(console_ui_test PRIVATE circuit_escape_ui)
+add_test(NAME ConsoleUiTest COMMAND console_ui_test)
 
 add_executable(scenarios_test tests/scenarios_test.cpp)
 target_link_libraries(scenarios_test PRIVATE circuit_escape_core)
